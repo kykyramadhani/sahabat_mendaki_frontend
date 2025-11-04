@@ -1,0 +1,86 @@
+// src/data/mock.ts
+export const GEAR_DATA = [
+  {
+    id: 'g001',
+    name: 'Tenda Dome Kapasitas 4 Orang',
+    category: 'Tenda',
+    pricePerDay: 50000,
+    vendor: 'Rinjani Gear',
+    imageUrl: 'https://placehold.co/400x300/a5f3fc/333333?text=Tenda+Dome',
+  },
+  {
+    id: 'g002',
+    name: 'Sepatu Gunung (Ukuran 40-44)',
+    category: 'Pakaian',
+    pricePerDay: 40000,
+    vendor: 'Lombok Adventurer',
+    imageUrl: 'https://placehold.co/400x300/a5f3fc/333333?text=Sepatu+Gunung',
+  },
+  {
+    id: 'g003',
+    name: 'Carrier/Tas Gunung 60L',
+    category: 'Perlengkapan',
+    pricePerDay: 45000,
+    vendor: 'Rinjani Gear',
+    imageUrl: 'https://placehold.co/400x300/a5f3fc/333333?text=Carrier+60L',
+  },
+  {
+    id: 'g004',
+    name: 'Kompor Lapangan & Nesting',
+    category: 'Alat Masak',
+    pricePerDay: 25000,
+    vendor: 'Lombok Adventurer',
+    imageUrl: 'https://placehold.co/400x300/a5f3fc/333333?text=Kompor+Nesting',
+  },
+  {
+    id: 'g005',
+    name: 'Sleeping Bag & Matras',
+    category: 'Perlengkapan',
+    pricePerDay: 20000,
+    vendor: 'Rinjani Gear',
+    imageUrl: 'https://placehold.co/400x300/a5f3fc/333333?text=Sleeping+Bag',
+  },
+  {
+    id: 'g006',
+    name: 'Jaket Gunung Waterproof',
+    category: 'Pakaian',
+    pricePerDay: 35000,
+    vendor: 'Lombok Adventurer',
+    imageUrl: 'https://placehold.co/400x300/a5f3fc/333333?text=Jaket+Gunung',
+  },
+];
+
+export const GUIDE_DATA = [
+  {
+    id: 'h001',
+    name: 'M. Rizki Assamsuli',
+    rating: 4.9,
+    specialty: 'Rinjani',
+    bio: 'Berpengalaman lebih dari 5 tahun memandu Rinjani. Menguasai jalur Sembalun dan Torean. Siap bantu karir guide baru!',
+    imageUrl: 'https://placehold.co/400x400/e0e7ff/4338ca?text=Rizki+A.',
+  },
+  {
+    id: 'h002',
+    name: 'Ida Ayu Varapanna',
+    rating: 4.8,
+    specialty: 'Pergasingan',
+    bio: 'Spesialisasi bukit Pergasingan dan area Sembalun. Ramah dan sangat sabar untuk pendaki pemula.',
+    imageUrl: 'https://placehold.co/400x400/e0e7ff/4338ca?text=Ayu+V.',
+  },
+  {
+    id: 'h003',
+    name: 'Putu Indah',
+    rating: 4.7,
+    specialty: 'Lainnya',
+    bio: 'Menyukai jalur-jalur yang jarang dilewati. Ahli dalam fotografi pendakian dan manajemen konten.',
+    imageUrl: 'https://placehold.co/400x400/e0e7ff/4338ca?text=Indah+P.',
+  },
+  {
+    id: 'h004',
+    name: 'Nengah Dwi',
+    rating: 5.0,
+    specialty: 'Rinjani',
+    bio: 'Guide senior dengan sertifikasi. Sangat fokus pada manajemen proyek pendakian dan keamanan grup besar.',
+    imageUrl: 'https://placehold.co/400x400/e0e7ff/4338ca?text=Nengah+D.',
+  },
+];
