@@ -60,7 +60,7 @@ export default function Header() {
         </nav>
 
         <button
-          className="md:hidden text-green-80"
+          className="md:hidden text-green-800"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
           {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
