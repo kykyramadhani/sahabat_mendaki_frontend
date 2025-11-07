@@ -1,4 +1,3 @@
-// src/components/shared/Header.tsx
 'use client';
 
 import { Mountain, Menu, X } from 'lucide-react';
@@ -26,9 +25,15 @@ export default function Header() {
     setIsMenuOpen(false);
   };
 
+  const handleLogin = () => {
+    router.push('/login');
+    setIsMenuOpen(false);
+  };
+
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
       <div className="container mx-auto px-4 h-20 flex justify-between items-center">
+        {/* Logo */}
         <a
           href="/"
           onClick={(e) => { e.preventDefault(); handleNav('/'); }}
@@ -40,6 +45,7 @@ export default function Header() {
           </span>
         </a>
 
+        {/* Desktop Menu */}
         <nav className="hidden md:flex items-center gap-6">
           {NavLinksData.map((link) => (
             <a
@@ -51,14 +57,24 @@ export default function Header() {
               {link.label}
             </a>
           ))}
+
+          {/* Tombol Login */}
+          <button
+            onClick={handleLogin}
+            className="border border-green-600 text-green-600 px-4 py-2 rounded-lg font-semibold hover:bg-green-50 transition-colors"
+          >
+            Login
+          </button>
+
           <button
             onClick={handleBooking}
-            className="bg-green-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-green-700 transition-shadow shadow-md"
+            className="bg-green-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-green-700 transition-shadow shadow-md ml-2"
           >
             Booking Sekarang
           </button>
         </nav>
 
+        {/* Mobile Menu Button */}
         <button
           className="md:hidden text-green-800"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -67,6 +83,7 @@ export default function Header() {
         </button>
       </div>
 
+      {/* Mobile Dropdown */}
       {isMenuOpen && (
         <div className="md:hidden absolute top-20 left-0 w-full bg-white shadow-xl z-40">
           <nav className="flex flex-col p-4">
@@ -80,6 +97,15 @@ export default function Header() {
                 {link.label}
               </a>
             ))}
+
+            {/* Tombol Login (Mobile) */}
+            <button
+              onClick={handleLogin}
+              className="mt-3 border border-green-600 text-green-600 text-center py-3 px-4 rounded-lg font-semibold hover:bg-green-50"
+            >
+              Login
+            </button>
+
             <button
               onClick={handleBooking}
               className="mt-3 bg-green-600 text-white text-center py-3 px-4 rounded-lg font-semibold hover:bg-green-700"
