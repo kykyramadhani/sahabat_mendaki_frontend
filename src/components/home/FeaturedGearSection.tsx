@@ -11,7 +11,7 @@ export default function FeaturedGearSection({ setPage }: { setPage: (page: strin
     <section className="py-16 bg-green-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-100">Peralatan Populer</h2>
+          <h2 className="text-3xl font-bold text-gray-700">Peralatan Populer</h2>
           <a
             href="#"
             onClick={(e) => { e.preventDefault(); setPage('gear'); }}

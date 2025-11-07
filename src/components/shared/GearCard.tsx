@@ -1,7 +1,8 @@
-// src/components/shared/GearCard.tsx
-import { GEAR_DATA } from '@/data/mock';
+'use client';
+import Link from 'next/link';
+import { Gear } from '@/data/mock';
 
-export default function GearCard({ gear }: { gear: any }) {
+export default function GearCard({ gear }: { gear: Gear }) {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg">
       <div className="relative h-48 w-full">
@@ -20,9 +21,11 @@ export default function GearCard({ gear }: { gear: any }) {
               Rp{gear.pricePerDay.toLocaleString('id-ID')}/hari
             </p>
           </div>
-          <button className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-green-700 transition">
-            Sewa
-          </button>
+          <Link href={`/gear/${gear.id}`}>
+            <button className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-green-700 transition">
+              Sewa
+            </button>
+          </Link>
         </div>
       </div>
     </div>

@@ -1,8 +1,9 @@
-// src/components/shared/GuideCard.tsx
+'use client';
 import { Star, MapPin } from 'lucide-react';
-import { GUIDE_DATA } from '@/data/mock';
+import Link from 'next/link';
+import { Guide } from '@/data/mock';
 
-export default function GuideCard({ guide }: { guide: any }) {
+export default function GuideCard({ guide }: { guide: Guide }) {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg">
       <div className="relative h-56 w-full">
@@ -21,9 +22,11 @@ export default function GuideCard({ guide }: { guide: any }) {
           Spesialisasi: {guide.specialty}
         </p>
         <p className="text-gray-600 text-sm mb-4 line-clamp-2">{guide.bio}</p>
-        <button className="w-full bg-green-600 text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-green-700 transition">
-          Lihat Profil Guide
-        </button>
+        <Link href={`/guides/${guide.id}`}>
+          <button className="w-full bg-green-600 text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-green-700 transition">
+            Lihat Profil Guide
+          </button>
+        </Link>
       </div>
     </div>
   );
