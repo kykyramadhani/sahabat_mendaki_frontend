@@ -1,5 +1,10 @@
 import { PackageCheck, ShieldHalf, Users2 } from 'lucide-react';
 
+// NEW: Interface untuk props
+interface ValuePropsSectionProps {
+  setPage: () => void;
+}
+
 const features = [
   {
     icon: PackageCheck,
@@ -18,7 +23,7 @@ const features = [
   },
 ];
 
-export default function ValuePropsSection() {
+export default function ValuePropsSection({ setPage }: ValuePropsSectionProps) {  // FIXED: Pakai interface
   return (
     <section className="py-20 bg-white">
       <div className="container mx-auto px-4">

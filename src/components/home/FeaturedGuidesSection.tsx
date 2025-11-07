@@ -1,17 +1,20 @@
 'use client';
-
-import { GUIDE_DATA } from '@/data/mock';
+import { GUIDE_DATA, Guide } from '@/data/mock';  // Import Guide type
 import GuideCard from '@/components/shared/GuideCard';
 import { ArrowRight } from 'lucide-react';
 
-export default function FeaturedGuidesSection({ setPage }: { setPage: (page: string) => void }) {
-  const featuredGuides = GUIDE_DATA.slice(0, 3);
+// NEW: Interface
+interface FeaturedGuidesSectionProps {
+  setPage: (page: string) => void;
+}
 
+export default function FeaturedGuidesSection({ setPage }: FeaturedGuidesSectionProps) {  // FIXED
+  const featuredGuides = GUIDE_DATA.slice(0, 3);
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-700">Guide Pilihan Kami</h2>
+          <h2 className="text-3xl font-bold">Guide Pilihan Kami</h2>
           <a
             href="#"
             onClick={(e) => { e.preventDefault(); setPage('guides'); }}
@@ -21,7 +24,7 @@ export default function FeaturedGuidesSection({ setPage }: { setPage: (page: str
           </a>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredGuides.map((guide) => (
+          {featuredGuides.map((guide: Guide) => (  // FIXED: Type guide
             <GuideCard key={guide.id} guide={guide} />
           ))}
         </div>
