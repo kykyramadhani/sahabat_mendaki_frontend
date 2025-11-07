@@ -14,7 +14,7 @@ export default function FeaturedGuidesSection({ setPage }: FeaturedGuidesSection
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold">Guide Pilihan Kami</h2>
+          <h2 className="text-3xl font-bold text-gray-700">Guide Pilihan Kami</h2>
           <a
             href="#"
             onClick={(e) => { e.preventDefault(); setPage('guides'); }}
