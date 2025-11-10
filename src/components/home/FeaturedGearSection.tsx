@@ -1,15 +1,33 @@
 'use client';
-import { GEAR_DATA, Gear } from '@/data/mock';  // Import Gear type
+
+import { useEffect, useState } from 'react';
 import GearCard from '@/components/shared/GearCard';
 import { ArrowRight } from 'lucide-react';
+import { getJson } from '@/lib/api';
 
 // NEW: Interface
 interface FeaturedGearSectionProps {
   setPage: (page: string) => void;  
 }
 
-export default function FeaturedGearSection({ setPage }: FeaturedGearSectionProps) {  // FIXED
-  const featuredGear = GEAR_DATA.slice(0, 4);
+export default function FeaturedGearSection({ setPage }: FeaturedGearSectionProps) {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await getJson('/search', { type: 'gear', limit: 4 });
+        setItems(res?.data || []);
+      } catch (err) {
+        console.warn('Failed to load featured gear', err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
   return (
     <section className="py-16 bg-green-50">
       <div className="container mx-auto px-4">
@@ -24,8 +42,19 @@ export default function FeaturedGearSection({ setPage }: FeaturedGearSectionProp
           </a>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuredGear.map((gear: Gear) => (  // FIXED: Type gear
-            <GearCard key={gear.id} gear={gear} />
+          {items.map((item) => (
+            <GearCard
+              key={item.id}
+              gear={{
+                id: item.id,
+                name: item.name || item.title,
+                category: item.category || 'Lainnya',
+                pricePerDay: item.rentalPricePerDay || item.rentalPrice || 0,
+                vendor: item.owner?.storeName || item.owner?.address || 'Toko',
+                imageUrl: item.images?.[0]?.url || '/images/placeholder.png',
+                variants: [],
+              }}
+            />
           ))}
         </div>
       </div>

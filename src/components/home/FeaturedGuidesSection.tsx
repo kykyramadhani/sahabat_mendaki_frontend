@@ -1,15 +1,33 @@
 'use client';
-import { GUIDE_DATA, Guide } from '@/data/mock';  // Import Guide type
+
+import { useEffect, useState } from 'react';
 import GuideCard from '@/components/shared/GuideCard';
 import { ArrowRight } from 'lucide-react';
+import { getJson } from '@/lib/api';
 
 // NEW: Interface
 interface FeaturedGuidesSectionProps {
   setPage: (page: string) => void;
 }
 
-export default function FeaturedGuidesSection({ setPage }: FeaturedGuidesSectionProps) {  // FIXED
-  const featuredGuides = GUIDE_DATA.slice(0, 3);
+export default function FeaturedGuidesSection({ setPage }: FeaturedGuidesSectionProps) {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await getJson('/search', { type: 'service', limit: 3 });
+        setItems(res?.data || []);
+      } catch (err) {
+        console.warn('Failed to load featured guides', err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
@@ -24,8 +42,19 @@ export default function FeaturedGuidesSection({ setPage }: FeaturedGuidesSection
           </a>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredGuides.map((guide: Guide) => (  // FIXED: Type guide
-            <GuideCard key={guide.id} guide={guide} />
+          {items.map((item) => (
+            <GuideCard
+              key={item.id}
+              guide={{
+                id: item.id,
+                name: item.guide?.fullName || item.title || item.name,
+                rating: item.rating || 0,
+                specialty: item.location || '',
+                bio: item.description || item.guide?.bio || '',
+                imageUrl: item.images?.[0]?.url || item.guide?.profilePicture || '/images/placeholder.png',
+                pricePerDay: item.pricePerDay || item.price || 0,
+              }}
+            />
           ))}
         </div>
       </div>

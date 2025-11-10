@@ -2,17 +2,45 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { postJson } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 
 export default function SignUpPage() {
   const router = useRouter();
-  const [username, setUsername] = useState('');
+  const { login } = useAuth();
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
   const [role, setRole] = useState('CUSTOMER');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSignUp = (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Akun dibuat!\nUsername: ${username}\nRole: ${role}`);
-    router.push('/login');
+    setError(null);
+    setLoading(true);
+    try {
+      // Register first
+      if (role === 'CUSTOMER') {
+        await postJson('/auth/register/customer', { fullName, email, password });
+      } else {
+        await postJson('/auth/register/provider', { fullName, email, password, role });
+      }
+      
+      // Then login to get token
+      const loginData = await postJson('/auth/login', { email, password });
+      if (loginData && loginData.access_token && loginData.user) {
+        login(loginData.access_token, loginData.user);
+        router.push('/');
+      } else {
+        throw new Error('Login failed after registration');
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.data?.message || 'Gagal mendaftar. Coba lagi.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -23,9 +51,18 @@ export default function SignUpPage() {
         <form onSubmit={handleSignUp} className="flex flex-col gap-4">
           <input
             type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Nama Lengkap"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+            required
+          />
+
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
             required
           />
@@ -49,11 +86,14 @@ export default function SignUpPage() {
             required
           />
 
+          {error && <p className="text-sm text-red-600">{error}</p>}
+
           <button
             type="submit"
-            className="bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+            disabled={loading}
+            className="bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-60"
           >
-            Sign Up
+            {loading ? 'Memproses...' : 'Sign Up'}
           </button>
         </form>
 

@@ -1,8 +1,19 @@
-'use client';
+"use client";
 import Link from 'next/link';
-import { Gear } from '@/data/mock';
 
-export default function GearCard({ gear }: { gear: Gear }) {
+interface GearCardProps {
+  gear: {
+    id: string;
+    name: string;
+    category: string;
+    pricePerDay: number;
+    vendor?: string;
+    imageUrl?: string;
+    variants?: any[];
+  };
+}
+
+export default function GearCard({ gear }: GearCardProps) {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg">
       <div className="relative h-48 w-full">

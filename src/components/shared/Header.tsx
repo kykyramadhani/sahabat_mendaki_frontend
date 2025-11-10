@@ -1,12 +1,14 @@
 'use client';
 
-import { Mountain, Menu, X } from 'lucide-react';
+import { Mountain, Menu, X, UserCircle, LogOut, Search as SearchIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
+  const { user, logout } = useAuth();
 
   const NavLinksData = [
     { href: '/', label: 'Home' },
@@ -14,6 +16,20 @@ export default function Header() {
     { href: '/guides', label: 'Cari Guide' },
     { href: '/about', label: 'Tentang Kami' },
   ];
+
+  // Add bookings link if user is logged in
+  const navLinks = user 
+    ? [...NavLinksData.slice(0, 3), { href: '/bookings', label: 'Booking Saya' }, NavLinksData[3]]
+    : NavLinksData;
+
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleHeaderSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!searchQuery) return router.push('/search');
+    router.push(`/search?query=${encodeURIComponent(searchQuery)}&page=1`);
+    setIsMenuOpen(false);
+  };
 
   const handleNav = (href: string) => {
     router.push(href);
@@ -27,6 +43,11 @@ export default function Header() {
 
   const handleLogin = () => {
     router.push('/login');
+    setIsMenuOpen(false);
+  };
+
+  const handleLogout = () => {
+    logout();
     setIsMenuOpen(false);
   };
 
@@ -46,8 +67,8 @@ export default function Header() {
         </a>
 
         {/* Desktop Menu */}
-        <nav className="hidden md:flex items-center gap-6">
-          {NavLinksData.map((link) => (
+        <nav className="hidden md:flex items-center gap-4">
+          {navLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
@@ -58,13 +79,43 @@ export default function Header() {
             </a>
           ))}
 
-          {/* Tombol Login */}
-          <button
-            onClick={handleLogin}
-            className="border border-green-600 text-green-600 px-4 py-2 rounded-lg font-semibold hover:bg-green-50 transition-colors"
-          >
-            Login
-          </button>
+          {/* quick search input in header (desktop) */}
+          <form onSubmit={handleHeaderSearch} className="hidden lg:flex items-center gap-2">
+            <input
+              aria-label="Cari"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari (mis. Rinjani, tenda)"
+              className="border border-gray-200 rounded-lg px-3 py-1 w-56 focus:outline-none"
+            />
+            <button type="submit" className="text-green-600 p-2 rounded hover:bg-green-50">
+              <SearchIcon className="w-5 h-5" />
+            </button>
+          </form>
+
+          {/* Auth Buttons */}
+          {user ? (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <UserCircle className="w-5 h-5 text-green-600" />
+                <span className="text-gray-700">{user.fullName}</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 border border-red-500 text-red-500 px-4 py-2 rounded-lg font-semibold hover:bg-red-50 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleLogin}
+              className="border border-green-600 text-green-600 px-4 py-2 rounded-lg font-semibold hover:bg-green-50 transition-colors"
+            >
+              Login
+            </button>
+          )}
 
           <button
             onClick={handleBooking}
@@ -87,7 +138,7 @@ export default function Header() {
       {isMenuOpen && (
         <div className="md:hidden absolute top-20 left-0 w-full bg-white shadow-xl z-40">
           <nav className="flex flex-col p-4">
-            {NavLinksData.map((link) => (
+            {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
@@ -98,13 +149,29 @@ export default function Header() {
               </a>
             ))}
 
-            {/* Tombol Login (Mobile) */}
-            <button
-              onClick={handleLogin}
-              className="mt-3 border border-green-600 text-green-600 text-center py-3 px-4 rounded-lg font-semibold hover:bg-green-50"
-            >
-              Login
-            </button>
+            {/* Auth Buttons (Mobile) */}
+            {user ? (
+              <>
+                <div className="mt-3 px-4 py-3 flex items-center gap-2 text-gray-700">
+                  <UserCircle className="w-5 h-5 text-green-600" />
+                  <span>{user.fullName}</span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="mt-3 border border-red-500 text-red-500 text-center py-3 px-4 rounded-lg font-semibold hover:bg-red-50 flex items-center justify-center gap-2"
+                >
+                  <LogOut className="w-5 h-5" />
+                  Logout
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={handleLogin}
+                className="mt-3 border border-green-600 text-green-600 text-center py-3 px-4 rounded-lg font-semibold hover:bg-green-50"
+              >
+                Login
+              </button>
+            )}
 
             <button
               onClick={handleBooking}
