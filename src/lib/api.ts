@@ -147,3 +147,25 @@ export async function postJsonAuth(path: string, body: any) {
   console.log('[API] Response status:', res.status);
   return handleResponse(res);
 }
+export async function patchJsonAuth(path: string, body: any) {
+  const base = getBaseUrl();
+  const url = `${base}${path}`;
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: getHeaders(),
+    body: JSON.stringify(body),
+  });
+  return handleResponse(res);
+}
+
+export async function deleteJsonAuth(path: string) {
+  const base = getBaseUrl();
+  const url = `${base}${path}`;
+  const res = await fetch(url, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  // Delete biasanya mengembalikan 200 OK dengan body pesan sederhana
+  if (!res.ok) throw { status: res.status, statusText: res.statusText };
+  return res.json().catch(() => ({}));
+}
