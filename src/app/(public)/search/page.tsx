@@ -1,17 +1,17 @@
 "use client";
 
-// Memaksa render dinamis agar tidak di-cache statis
 export const dynamic = 'force-dynamic';
 
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation'; // <-- IMPORT PENTING
+import { useEffect, useState, useCallback, Suspense } from 'react'; // Import Suspense
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getJson } from '@/lib/api';
 import GearCard from '@/components/shared/GearCard';
 import GuideCard from '@/components/shared/GuideCard';
 
-export default function SearchPage() {
+// --- 1. PISAHKAN LOGIKA UTAMA KE KOMPONEN BARU ---
+function SearchContent() {
   const router = useRouter();
-  const searchParams = useSearchParams(); // <-- HOOK PENTING INI
+  const searchParams = useSearchParams();
 
   // State form
   const [query, setQuery] = useState('');
@@ -30,12 +30,10 @@ export default function SearchPage() {
   const [pagination, setPagination] = useState<any | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
 
-  // Fungsi pencarian utama
   const doSearch = useCallback(async (page = 1, overrides: any = {}) => {
     setLoading(true);
     setError(null);
     try {
-      // Prioritaskan nilai dari 'overrides', jika tidak ada ambil dari state
       const params: any = { 
         query: overrides.query !== undefined ? overrides.query : query, 
         page, 
@@ -68,8 +66,6 @@ export default function SearchPage() {
     }
   }, [query, type, location, minPrice, maxPrice, category, sort, limit]);
 
-  // --- USE EFFECT UTAMA (DIPERBAIKI) ---
-  // Ini akan berjalan setiap kali URL (searchParams) berubah
   useEffect(() => {
     const q = searchParams.get('query') || '';
     const t = searchParams.get('type') || '';
@@ -81,7 +77,6 @@ export default function SearchPage() {
     const lim = searchParams.get('limit') || '10';
     const page = Number(searchParams.get('page') || '1');
 
-    // Sinkronkan URL ke State UI
     setQuery(q);
     setType(t);
     setLocation(loc);
@@ -91,21 +86,11 @@ export default function SearchPage() {
     setSort(s);
     setLimit(lim);
 
-    // Langsung panggil pencarian dengan data dari URL
     doSearch(page, {
-      query: q,
-      type: t,
-      location: loc,
-      minPrice: min,
-      maxPrice: max,
-      category: cat,
-      sort: s,
-      limit: lim
+      query: q, type: t, location: loc, minPrice: min, maxPrice: max, category: cat, sort: s, limit: lim
     });
+  }, [searchParams, doSearch]);
 
-  }, [searchParams, doSearch]); // <-- Dependency 'searchParams' adalah kuncinya!
-
-  // Fetch categories sekali saja saat mount
   useEffect(() => {
     (async () => {
       try {
@@ -134,8 +119,6 @@ export default function SearchPage() {
     if (sort) qs.set('sort', sort);
     if (limit) qs.set('limit', limit);
     qs.set('page', '1');
-    
-    // Ini akan mengubah URL, yang kemudian akan memicu useEffect di atas
     router.push(`/search?${qs.toString()}`);
   };
 
@@ -156,7 +139,6 @@ export default function SearchPage() {
         </div>
       );
     }
-
     const guide = {
       id: item.id,
       name: item.guide?.fullName || item.title || item.name,
@@ -167,7 +149,6 @@ export default function SearchPage() {
       pricePerDay: item.pricePerDay || item.price || 0,
       variants: item.variants || [],
     };
-
     return (
       <div key={item.id || idx} className="w-full md:w-1/3 p-2">
         <GuideCard guide={guide} />
@@ -179,13 +160,13 @@ export default function SearchPage() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-4">Cari</h1>
 
-      <form onSubmit={onSubmit} className="flex flex-col md:flex-row gap-3 mb-6">
+      <form onSubmit={onSubmit} className="flex flex-col md:flex-row gap-3 mb-6 flex-wrap">
         <input
           type="text"
-          placeholder="Kata kunci (mis. hike, rinjani, backpack)"
+          placeholder="Kata kunci..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="border p-2 rounded-md flex-1"
+          className="border p-2 rounded-md flex-1 min-w-[200px]"
         />
         <select value={type} onChange={(e) => setType(e.target.value)} className="border p-2 rounded-md">
           <option value="">Semua</option>
@@ -204,9 +185,9 @@ export default function SearchPage() {
           <option value="10">10</option>
           <option value="20">20</option>
         </select>
-        <input type="text" placeholder="Lokasi" value={location} onChange={(e) => setLocation(e.target.value)} className="border p-2 rounded-md" />
-        <select value={category} onChange={(e) => setCategory(e.target.value)} className="border p-2 rounded-md">
-          <option value="">Semua Kategori</option>
+        <input type="text" placeholder="Lokasi" value={location} onChange={(e) => setLocation(e.target.value)} className="border p-2 rounded-md w-32" />
+        <select value={category} onChange={(e) => setCategory(e.target.value)} className="border p-2 rounded-md w-40">
+          <option value="">Kategori</option>
           {categories.map((c) => (
             <option value={c} key={c}>{c}</option>
           ))}
@@ -231,7 +212,7 @@ export default function SearchPage() {
                 qs.set('page', String(pagination.page - 1));
                 router.push(`/search?${qs.toString()}`);
             }}
-            className="px-3 py-2 border rounded"
+            className="px-3 py-2 border rounded disabled:opacity-50"
           >
             Prev
           </button>
@@ -245,12 +226,21 @@ export default function SearchPage() {
                 qs.set('page', String(pagination.page + 1));
                 router.push(`/search?${qs.toString()}`);
             }}
-            className="px-3 py-2 border rounded"
+            className="px-3 py-2 border rounded disabled:opacity-50"
           >
             Next
           </button>
         </div>
       )}
     </div>
+  );
+}
+
+// --- 2. KOMPONEN PEMBUNGKUS DENGAN SUSPENSE ---
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Memuat pencarian...</div>}>
+      <SearchContent />
+    </Suspense>
   );
 }
