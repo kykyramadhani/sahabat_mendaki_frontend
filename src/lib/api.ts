@@ -169,26 +169,3 @@ export async function deleteJsonAuth(path: string) {
   if (!res.ok) throw { status: res.status, statusText: res.statusText };
   return res.json().catch(() => ({}));
 }
-
-export async function getCashflow() {
-  const base = getBaseUrl();
-  const url = `${base}/bookings/cashlow`;
-
-  console.log("[API] GET Cashflow:", url);
-
-  try {
-    const res = await fetch(url, {
-      method: "GET",
-      headers: getHeaders(),
-      cache: "no-store",
-    });
-
-    return await handleResponse(res);
-
-  } catch (error) {
-    console.error("❌ Cashflow fetch error:", error);
-    throw new Error(
-      error instanceof Error ? error.message : JSON.stringify(error)
-    );
-  }
-}

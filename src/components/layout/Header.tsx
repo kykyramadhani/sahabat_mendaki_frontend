@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { LogOut, User, Menu } from 'lucide-react';
+import { LogOut, Menu } from 'lucide-react'; // Hapus import 'User' yang tidak dipakai
 import { useState } from 'react';
 
 export default function Header() {
@@ -28,15 +28,16 @@ export default function Header() {
           )}
 
           {user?.role === 'GUIDE' && (
-            <>
-              <Link href="/guide-management" className="text-blue-600 font-medium">Kelola Layanan</Link>
-
-              {/* ➜ LINK CASHFLOW DITAMBAHKAN DI SINI */}
-              <Link href="/guide-management/cashflow" className="text-orange-600 font-medium">
-                Cashflow
-              </Link>
-            </>
+            <Link href="/guide-management" className="text-blue-600 font-medium">Kelola Layanan</Link>
           )}
+
+          {/* MENU CASHFLOW (Untuk Guide & Gear Owner) */}
+          {(user?.role === 'GUIDE' || user?.role === 'GEAR_OWNER') && (
+            <Link href="/cashflow" className="text-orange-600 font-medium">
+              Cashflow
+            </Link>
+          )}
+
           {user?.role === 'CUSTOMER' && (
             <Link href="/bookings" className="text-gray-600 hover:text-green-600">Booking Saya</Link>
           )}
@@ -77,9 +78,23 @@ export default function Header() {
           <Link href="/search?type=service" onClick={() => setIsMenuOpen(false)}>Cari Guide</Link>
           {user ? (
             <>
-              {user.role === 'GEAR_OWNER' && <Link href="/gear-management">Kelola Gear</Link>}
-              {user.role === 'GUIDE' && <Link href="/guide-management">Kelola Layanan</Link>}
-              {user.role === 'CUSTOMER' && <Link href="/bookings">Booking Saya</Link>}
+              {user.role === 'GEAR_OWNER' && (
+                <Link href="/gear-management" onClick={() => setIsMenuOpen(false)}>Kelola Gear</Link>
+              )}
+              {user.role === 'GUIDE' && (
+                <Link href="/guide-management" onClick={() => setIsMenuOpen(false)}>Kelola Layanan</Link>
+              )}
+              
+              {/* Cashflow di Mobile Menu */}
+              {(user.role === 'GUIDE' || user.role === 'GEAR_OWNER') && (
+                <Link href="/cashflow" onClick={() => setIsMenuOpen(false)} className="text-orange-600 font-medium">
+                  Laporan Keuangan
+                </Link>
+              )}
+
+              {user.role === 'CUSTOMER' && (
+                <Link href="/bookings" onClick={() => setIsMenuOpen(false)}>Booking Saya</Link>
+              )}
               <hr />
               <button onClick={logout} className="text-red-500 text-left">Logout</button>
             </>

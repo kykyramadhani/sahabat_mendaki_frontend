@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react';
 import WithAuth from '@/components/shared/WithAuth';
 import { getJson, postJsonAuth, deleteJsonAuth, patchJsonAuth } from '@/lib/api';
 import { Plus, Edit, Trash2, X, Image as ImageIcon, MapPin, Clock, Users } from 'lucide-react';
+// Import komponen Form yang sudah dipisah
 import ServiceForm, { ServiceFormData } from '@/components/features/management/ServiceForm';
 
 interface Service extends ServiceFormData {
   id: string;
-  images: any[]; // Backend return object {id, url}, kita map nanti
+  images: any[]; // Backend return object {id, url}
 }
 
 export default function GuideManagementPage() {
@@ -16,6 +17,7 @@ export default function GuideManagementPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // State Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -24,7 +26,6 @@ export default function GuideManagementPage() {
   const fetchMyServices = async () => {
     setLoading(true);
     try {
-      // Endpoint backend untuk guide
       const data = await getJson('/services/my-services');
       setServices(data);
     } catch (err: any) {
@@ -46,7 +47,7 @@ export default function GuideManagementPage() {
   };
 
   const handleEdit = (service: Service) => {
-    // Flatten images array of objects to array of strings for form
+    // Flatten images array of objects -> array of strings (untuk form)
     const mappedService = {
         ...service,
         images: service.images.map((img: any) => img.url)
@@ -141,7 +142,7 @@ export default function GuideManagementPage() {
           </div>
         )}
 
-        {/* MODAL */}
+        {/* MODAL: Panggil ServiceForm di sini */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
             <div className="bg-white rounded-xl w-full max-w-2xl my-8 shadow-2xl relative flex flex-col max-h-[90vh]">
@@ -151,12 +152,14 @@ export default function GuideManagementPage() {
               </div>
               <div className="p-6 overflow-y-auto">
                 
+                {/* --- INI PENGGANTI KODE PANJANG YANG LAMA --- */}
                 <ServiceForm 
                     initialData={editingService} 
                     onSubmit={onFormSubmit} 
                     onCancel={() => setIsModalOpen(false)}
                     isLoading={submitting}
                 />
+                {/* ------------------------------------------- */}
 
               </div>
             </div>
