@@ -22,12 +22,20 @@ export default function Header() {
           <Link href="/search?type=gear" className="text-gray-600 hover:text-green-600">Sewa Alat</Link>
           <Link href="/search?type=service" className="text-gray-600 hover:text-green-600">Cari Guide</Link>
           
-          {/* Menu Khusus Role */}
+          {/* Role-based menu */}
           {user?.role === 'GEAR_OWNER' && (
             <Link href="/gear-management" className="text-blue-600 font-medium">Kelola Gear</Link>
           )}
+
           {user?.role === 'GUIDE' && (
-            <Link href="/guide-management" className="text-blue-600 font-medium">Kelola Layanan</Link>
+            <>
+              <Link href="/guide-management" className="text-blue-600 font-medium">Kelola Layanan</Link>
+
+              {/* ➜ LINK CASHFLOW DITAMBAHKAN DI SINI */}
+              <Link href="/guide-management/cashflow" className="text-orange-600 font-medium">
+                Cashflow
+              </Link>
+            </>
           )}
           {user?.role === 'CUSTOMER' && (
             <Link href="/bookings" className="text-gray-600 hover:text-green-600">Booking Saya</Link>
