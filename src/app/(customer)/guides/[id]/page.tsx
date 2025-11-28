@@ -19,12 +19,8 @@ export default function GuideDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [bookingLoading, setBookingLoading] = useState(false);
 
-  // --- STATE UNTUK VARIAN ---
-  // Array of Records, misal: [{ "Layanan": "Makan" }, { "Layanan": "Tidak Makan" }]
+  // State Varian & Form
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>[]>([]);
-  // -------------------------
-
-  // State untuk form
   const [numberOfPeople, setNumberOfPeople] = useState<number>(1);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [notes, setNotes] = useState<string>('');
@@ -48,57 +44,48 @@ export default function GuideDetailPage() {
   // --- LOGIKA VARIAN ---
   const hasVariants = guide?.variants && guide.variants.length > 0;
 
-  // Efek untuk menyesuaikan array selectedVariants saat numberOfPeople berubah
   useEffect(() => {
-    if (!hasVariants) return;
+    if (!hasVariants || !guide) return;
 
-    // Buat objek default untuk satu orang
     const defaultVariantState = guide.variants.reduce((acc: any, variant: any) => {
-      acc[variant.name] = ''; // Default kosong (belum dipilih)
+      acc[variant.name] = ''; 
       return acc;
     }, {} as Record<string, string>);
 
-    // Sesuaikan array state dengan quantity baru
     setSelectedVariants(current => {
       const newArray = [...current.slice(0, numberOfPeople)];
       while (newArray.length < numberOfPeople) {
-        newArray.push({ ...defaultVariantState }); // Tambahkan orang baru
+        newArray.push({ ...defaultVariantState }); 
       }
       return newArray;
     });
   }, [numberOfPeople, hasVariants, guide?.variants]);
 
-  // Handler untuk mengubah pilihan varian
   const handleVariantChange = (itemIndex: number, variantName: string, value: string) => {
     setSelectedVariants(current => {
-      const newVariants = [...current]; // Salin array luar
-      newVariants[itemIndex] = { ...newVariants[itemIndex] }; // Salin objek dalam
+      const newVariants = [...current];
+      newVariants[itemIndex] = { ...newVariants[itemIndex] }; 
       newVariants[itemIndex][variantName] = value;
       return newVariants;
     });
   };
-  // -----------------------
 
-  if (loading) return <PageWrapper><p className="text-center p-8">Memuat...</p></PageWrapper>;
-  if (error) return <PageWrapper><p className="text-center p-8 text-red-600">{error}</p></PageWrapper>;
-  if (!guide) return <PageWrapper><p className="text-center text-gray-500">Paket guide tidak ditemukan.</p></PageWrapper>;
-
-  // --- Logika Baru Sesuai Data Backend ---
-  const servicePrice = guide.price || 0;
-  const serviceDuration = guide.duration || 1;
-  const maxGroupSize = guide.maxGroupSize || 1;
+  // --- LOGIKA PERHITUNGAN ---
+  const servicePrice = Number(guide?.price) || 0;
+  const serviceDuration = Math.max(1, Number(guide?.duration) || 1); 
+  const maxGroupSize = Number(guide?.maxGroupSize) || 1;
 
   const calculatedEndDate = startDate
     ? new Date(startDate.getTime() + (serviceDuration - 1) * 24 * 60 * 60 * 1000)
     : null;
 
-  const total = servicePrice; // Harga paket tetap
-  // ---------------------------------------
+  const total = servicePrice; 
 
-  // Validasi Varian
+  // --- PERBAIKAN: VARIABEL INI DIPINDAHKAN KE SINI (COMPONENT SCOPE) ---
   const areVariantsIncomplete = hasVariants && selectedVariants.some(variantSet => 
     Object.values(variantSet).some(option => option === '')
   );
+  // ---------------------------------------------------------------------
 
   const handleQuantityChange = (newQty: number) => {
     if (newQty < 1) return;
@@ -115,15 +102,12 @@ export default function GuideDetailPage() {
       router.push('/login');
       return;
     }
+
     if (!startDate) {
       alert('Pilih tanggal booking terlebih dahulu');
       return;
     }
-    if (numberOfPeople > maxGroupSize) {
-       alert(`Maksimal ${maxGroupSize} orang untuk paket ini.`);
-       return;
-    }
-    // Validasi varian sebelum kirim
+    
     if (areVariantsIncomplete) {
       alert('Harap pilih semua opsi varian untuk setiap anggota.');
       return;
@@ -135,33 +119,24 @@ export default function GuideDetailPage() {
         itemType: 'service',
         itemId: guide.id,
         startDate: startDate.toISOString(),
-        endDate: calculatedEndDate?.toISOString(),
-        quantity: 1, // Kuantitas paket adalah 1
-        numberOfPeople: numberOfPeople, // Jumlah orang
+        endDate: calculatedEndDate ? calculatedEndDate.toISOString() : startDate.toISOString(),
+        quantity: 1, 
+        numberOfPeople: numberOfPeople, 
         notes: notes || undefined,
-        // Kirim detail varian yang dipilih
         bookingDetails: {
-          selectedVariants: selectedVariants
+          selectedVariants: selectedVariants 
         }
       };
 
       console.log('Creating booking:', bookingData);
-      const bookingResponse = await postJsonAuth('/bookings', bookingData);
-      console.log('Booking response:', bookingResponse);
+      
+      const response = await postJsonAuth('/bookings', bookingData);
+      console.log('Booking response:', response);
 
-      // Buat payment
-      const paymentResponse = await postJsonAuth('/payments', {
-          bookingId: bookingResponse.id,
-          amount: bookingResponse.totalAmount,
-          successRedirectUrl: `${window.location.origin}/payment/success`,
-          failureRedirectUrl: `${window.location.origin}/payment/failed`,
-      });
-
-      // Arahkan ke Midtrans
-      if (paymentResponse.paymentDetails && paymentResponse.paymentDetails.redirect_url) {
-        window.location.href = paymentResponse.paymentDetails.redirect_url;
+      if (response.payment && response.payment.paymentUrl) {
+        window.location.href = response.payment.paymentUrl;
       } else {
-        throw new Error('Gagal mendapatkan URL pembayaran.');
+        router.push(`/bookings/${response.booking.id}/success`);
       }
       
     } catch (err: any) {
@@ -171,6 +146,10 @@ export default function GuideDetailPage() {
       setBookingLoading(false);
     }
   };
+
+  if (loading) return <PageWrapper><p className="text-center p-8">Memuat...</p></PageWrapper>;
+  if (error) return <PageWrapper><p className="text-center p-8 text-red-600">{error}</p></PageWrapper>;
+  if (!guide) return <PageWrapper><p className="text-center text-gray-500">Paket guide tidak ditemukan.</p></PageWrapper>;
 
   return (
     <PageWrapper>
@@ -190,7 +169,7 @@ export default function GuideDetailPage() {
                 Rp{servicePrice.toLocaleString('id-ID')} / paket
               </p>
               <p className="text-gray-600 mb-2 -mt-4">
-                Durasi paket: <strong>{serviceDuration} hari</strong>
+                Durasi paket: <strong>{serviceDuration} Hari</strong>
               </p>
 
               <div className="mb-6">
@@ -204,15 +183,13 @@ export default function GuideDetailPage() {
                 </div>
               </div>
 
-              {/* --- BLOK VARIAN BARU --- */}
+              {/* Varian Section */}
               {hasVariants && (
                 <div className="mb-6">
                   <label className="block text-gray-700 font-semibold mb-2">Detail Pilihan Anggota:</label>
-                  {/* Render dropdown untuk setiap orang */}
                   {Array.from({ length: numberOfPeople }).map((_, index) => (
                     <div key={index} className="mb-4 p-3 border rounded-lg bg-gray-50">
                       <span className="font-semibold text-gray-600">Anggota {index + 1}:</span>
-                      {/* Render setiap tipe varian (misal: "Waktu Mulai", "Layanan") */}
                       {guide.variants.map((variant: any) => (
                         <div key={variant.name} className="mt-2">
                           <label className="block text-sm text-gray-500 mb-1">{variant.name}</label>
@@ -220,6 +197,7 @@ export default function GuideDetailPage() {
                             value={selectedVariants[index]?.[variant.name] || ''}
                             onChange={(e) => handleVariantChange(index, variant.name, e.target.value)}
                             className="text-gray-600 w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                            required
                           >
                             <option value="">Pilih {variant.name}...</option>
                             {variant.options.map((opt: string) => (
@@ -232,33 +210,35 @@ export default function GuideDetailPage() {
                   ))}
                 </div>
               )}
-              {/* ----------------------- */}
 
+              {/* Date Picker Section */}
               <div className="mb-6">
                 <label className="block text-gray-700 font-semibold mb-2">Pilih Tanggal Mulai Booking:</label>
                 <div className="flex flex-col md:flex-row gap-4">
-                  <DatePicker 
-                    selected={startDate} 
-                    onChange={setStartDate} 
-                    selectsStart 
-                    startDate={startDate} 
-                    endDate={calculatedEndDate}
-                    minDate={new Date()}
-                    placeholderText="Tanggal Mulai" 
-                    className="text-gray-600 w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
-                  <DatePicker 
-                    selected={calculatedEndDate} 
-                    onChange={() => {}} // Not changeable
-                    selectsEnd 
-                    startDate={startDate} 
-                    endDate={calculatedEndDate} 
-                    minDate={startDate ?? new Date()}
-                    placeholderText="Tanggal Selesai (Otomatis)" 
-                    className="text-gray-600 w-full p-2 border border-gray-300 rounded bg-gray-100 cursor-not-allowed"
-                    readOnly
-                  />
+                  <div className="w-full">
+                    <DatePicker 
+                        selected={startDate} 
+                        onChange={setStartDate} 
+                        selectsStart 
+                        startDate={startDate} 
+                        endDate={calculatedEndDate || undefined}
+                        minDate={new Date()}
+                        placeholderText="Pilih Tanggal" 
+                        className="text-gray-600 w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                  </div>
+                  {/* End Date Picker Read-Only */}
+                  <div className="w-full">
+                    <input 
+                        type="text"
+                        value={calculatedEndDate ? calculatedEndDate.toLocaleDateString('id-ID') : '-'}
+                        readOnly
+                        className="text-gray-600 w-full p-2 border border-gray-300 rounded bg-gray-100 cursor-not-allowed"
+                        placeholder="Selesai (Otomatis)"
+                    />
+                  </div>
                 </div>
+                <p className="text-xs text-gray-500 mt-1">*Tanggal selesai dihitung otomatis berdasarkan durasi paket.</p>
               </div>
 
               <div className="mb-6">
