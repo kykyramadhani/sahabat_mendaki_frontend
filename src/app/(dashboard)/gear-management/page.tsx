@@ -108,26 +108,37 @@ export default function GearManagementPage() {
          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {gears.map(gear => (
-              <div key={gear.id} className="bg-white border rounded-lg shadow-sm overflow-hidden group">
-                <div className="relative h-48 bg-gray-100">
-                  {gear.images[0] ? (
-                    <img src={gear.images[0].url} alt={gear.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-300"><ImageIcon size={48}/></div>
-                  )}
-                  <div className="absolute top-2 right-2 bg-white/90 px-2 py-1 rounded text-xs font-bold text-green-700">
-                    Rp{gear.rentalPricePerDay.toLocaleString('id-ID')}/hari
-                  </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-bold text-lg truncate">{gear.name}</h3>
-                  <p className="text-sm text-gray-500 capitalize">{gear.category} • Stok: {gear.stock}</p>
-                  <div className="flex justify-end gap-2 mt-4 border-t pt-3">
-                    <button onClick={() => handleEdit(gear)} className="text-blue-600 hover:bg-blue-50 p-2 rounded"><Edit size={18} /></button>
-                    <button onClick={() => handleDelete(gear.id)} className="text-red-600 hover:bg-red-50 p-2 rounded"><Trash2 size={18} /></button>
-                  </div>
-                </div>
-              </div>
+              <div key={gear.id} className="bg-white border rounded-lg shadow-sm overflow-hidden group flex flex-col">
+  
+  {/* PERBAIKAN: Ganti 'h-48' menjadi 'aspect-square' (Rasio 1:1) */}
+  <div className="relative aspect-square bg-gray-100 border-b">
+    {gear.images[0] ? (
+      <img 
+        src={gear.images[0].url} 
+        alt={gear.name} 
+        className="w-full h-full object-cover" // object-cover aman karena container sudah 1:1
+      />
+    ) : (
+      <div className="w-full h-full flex items-center justify-center text-gray-300">
+        <ImageIcon size={48}/>
+      </div>
+    )}
+    
+    <div className="absolute top-2 right-2 bg-white/90 px-2 py-1 rounded text-xs font-bold text-green-700 shadow-sm">
+      Rp{gear.rentalPricePerDay.toLocaleString('id-ID')}/hari
+    </div>
+  </div>
+
+  <div className="p-4 flex flex-col flex-grow">
+    <h3 className="font-bold text-lg truncate">{gear.name}</h3>
+    <p className="text-sm text-gray-500 capitalize mb-4">{gear.category} • Stok: {gear.stock}</p>
+    
+    <div className="mt-auto flex justify-end gap-2 border-t pt-3">
+      <button onClick={() => handleEdit(gear)} className="text-blue-600 hover:bg-blue-50 p-2 rounded transition"><Edit size={18} /></button>
+      <button onClick={() => handleDelete(gear.id)} className="text-red-600 hover:bg-red-50 p-2 rounded transition"><Trash2 size={18} /></button>
+    </div>
+  </div>
+</div>
             ))}
           </div>
         )}

@@ -1,5 +1,6 @@
 'use client';
-import { Star, MapPin } from 'lucide-react';
+
+import { Star, MapPin, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 
 interface GuideCardProps {
@@ -17,28 +18,50 @@ interface GuideCardProps {
 
 export default function GuideCard({ guide }: GuideCardProps) {
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg">
-      <div className="relative h-56 w-full">
-        <img src={guide.imageUrl} alt={guide.name} className="w-full h-full object-cover" />
-      </div>
-      <div className="p-4">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="text-xl font-bold text-gray-800">{guide.name}</h3>
-          <div className="flex items-center gap-1 bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
-            <Star size={14} fill="currentColor" />
-            <span className="text-sm font-bold">{(guide.rating ?? 0).toFixed(1)}</span>
+    <div className="bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col h-full">
+      
+      {/* IMAGE CONTAINER (ASPECT 4:3 / LANDSCAPE) */}
+      <div className="relative aspect-[4/3] w-full bg-gray-100 overflow-hidden">
+        {guide.imageUrl ? (
+          <img 
+            src={guide.imageUrl} 
+            alt={guide.name} 
+            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" 
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-300">
+            <ImageIcon size={48} />
           </div>
+        )}
+        
+        {/* Rating Badge (Overlay) */}
+        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm flex items-center gap-1">
+          <Star size={14} className="text-yellow-500 fill-yellow-500" />
+          <span className="text-sm font-bold text-gray-800">{(guide.rating ?? 0).toFixed(1)}</span>
         </div>
-        <p className="flex items-center gap-2 text-green-700 text-sm font-medium mb-3">
-          <MapPin size={16} />
-          Spesialisasi: {guide.specialty}
+      </div>
+
+      {/* CONTENT */}
+      <div className="p-5 flex flex-col flex-grow">
+        <h3 className="text-xl font-bold text-gray-800 mb-1 line-clamp-1">{guide.name}</h3>
+        
+        <div className="flex items-center gap-1.5 text-gray-600 text-sm mb-3">
+          <MapPin size={14} className="text-green-600" />
+          <span className="truncate">{guide.specialty || 'Pemandu Gunung'}</span>
+        </div>
+        
+        <p className="text-gray-500 text-sm mb-4 line-clamp-2 leading-relaxed">
+          {guide.bio || 'Guide berpengalaman siap menemani perjalanan mendaki Anda dengan aman dan nyaman.'}
         </p>
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">{guide.bio}</p>
-        <Link href={`/guides/${guide.id}`}>
-          <button className="w-full bg-green-600 text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-green-700 transition">
-            Lihat Profil Guide
-          </button>
-        </Link>
+        
+        {/* Tombol Full Width di Bawah */}
+        <div className="mt-auto">
+          <Link href={`/guides/${guide.id}`} className="block w-full">
+            <button className="w-full bg-white border border-green-600 text-green-600 px-4 py-2.5 rounded-lg font-semibold hover:bg-green-50 transition-colors">
+              Lihat Profil
+            </button>
+          </Link>
+        </div>
       </div>
     </div>
   );

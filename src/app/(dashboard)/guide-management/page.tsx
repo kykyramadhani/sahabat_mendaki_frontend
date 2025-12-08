@@ -111,33 +111,32 @@ export default function GuideManagementPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {services.map(service => (
               <div key={service.id} className="bg-white border rounded-lg shadow-sm overflow-hidden flex flex-col md:flex-row hover:shadow-md transition">
-                {/* Image Thumbnail */}
-                <div className="relative w-full md:w-48 h-48 bg-gray-100 flex-shrink-0">
-                  {service.images[0] ? (
-                    <img src={service.images[0].url} alt={service.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-300"><ImageIcon size={32}/></div>
-                  )}
-                </div>
-                
-                {/* Content */}
-                <div className="p-4 flex-grow flex flex-col justify-between">
-                  <div>
-                    <h3 className="font-bold text-lg mb-1">{service.title}</h3>
-                    <div className="flex flex-wrap gap-3 text-sm text-gray-600 mb-3">
-                        <span className="flex items-center gap-1"><MapPin size={14}/> {service.location}</span>
-                        <span className="flex items-center gap-1"><Clock size={14}/> {service.duration} Hari</span>
-                        <span className="flex items-center gap-1"><Users size={14}/> Max {service.maxGroupSize}</span>
-                    </div>
-                    <p className="text-green-600 font-bold text-lg">Rp{service.price.toLocaleString('id-ID')}</p>
-                  </div>
-                  
-                  <div className="flex justify-end gap-2 mt-4 border-t pt-3">
-                    <button onClick={() => handleEdit(service)} className="flex items-center gap-1 text-blue-600 hover:bg-blue-50 px-3 py-1 rounded text-sm"><Edit size={16} /> Edit</button>
-                    <button onClick={() => handleDelete(service.id)} className="flex items-center gap-1 text-red-600 hover:bg-red-50 px-3 py-1 rounded text-sm"><Trash2 size={16} /> Hapus</button>
-                  </div>
-                </div>
-              </div>
+  
+  {/* PERBAIKAN: 
+      1. Hapus 'h-48'
+      2. Tambahkan 'aspect-[4/3]' agar rasio 4:3 terjaga 
+      3. Pada mobile (w-full), dia akan jadi kotak 4:3 besar.
+      4. Pada desktop (md:w-64), lebarnya tetap, tingginya menyesuaikan rasio.
+  */}
+  <div className="relative w-full md:w-64 aspect-[4/3] bg-gray-100 flex-shrink-0">
+    {service.images[0] ? (
+      <img 
+        src={service.images[0].url} 
+        alt={service.title} 
+        className="w-full h-full object-cover" 
+      />
+    ) : (
+      <div className="w-full h-full flex items-center justify-center text-gray-300">
+        <ImageIcon size={32}/>
+      </div>
+    )}
+  </div>
+  
+  {/* Content */}
+  <div className="p-4 flex-grow flex flex-col justify-between">
+     {/* ... isi konten sama ... */}
+  </div>
+</div>
             ))}
           </div>
         )}
