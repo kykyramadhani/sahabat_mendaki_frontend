@@ -3,7 +3,8 @@
 import WithAuth from '@/components/shared/WithAuth';
 import { useAuth } from '@/lib/auth';
 import { useState } from 'react';
-import ProfileCard from '@/components/shared/ProfileCard';
+// Sesuaikan path import ini dengan struktur folder Anda
+import ProfileCard from '@/components/shared/ProfileCard'; 
 import EditProfileForm from '@/components/shared/EditProfileForm';
 import { patchJsonAuth } from '@/lib/api';
 
@@ -13,7 +14,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  if (loading) return null;
+  if (loading) return <div className="p-8 text-center">Memuat profil...</div>;
 
   if (!contextUser) return null;
 
@@ -21,28 +22,26 @@ export default function ProfilePage() {
     setSaving(true);
     setMessage(null);
     try {
-      // Update user on backend
+      // 1. Update ke Backend
       const res = await patchJsonAuth(`/users/${contextUser.id}`, data);
 
-      // If backend returns updated user object, use it. Otherwise merge
+      // 2. Dapatkan data user terbaru
+      // Backend biasanya return { user: ... } atau langsung object usernya
       const updatedUser = res?.user || res || { ...contextUser, ...data };
 
-      // Update localStorage and Auth context
+      // 3. Update Local Storage & Context (PENTING AGAR UI BERUBAH)
       const token = typeof window !== 'undefined' ? localStorage.getItem('jwt') || '' : '';
       if (token) {
         localStorage.setItem('user', JSON.stringify(updatedUser));
-        login(token, updatedUser);
-      } else {
-        // fallback: just update localStorage
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+        login(token, updatedUser); // Trigger update state global
       }
 
-      setMessage('Profil berhasil diperbarui');
+      setMessage('Profil berhasil diperbarui!');
       setEditing(false);
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error('Update profile failed', err);
-      const e = err as { message?: string; data?: { message?: string } };
-      setMessage(e?.data?.message || e?.message || 'Gagal memperbarui profil');
+      const errMsg = err?.data?.message || err?.message || 'Gagal memperbarui profil';
+      setMessage(Array.isArray(errMsg) ? errMsg.join(', ') : errMsg);
     } finally {
       setSaving(false);
     }
@@ -50,16 +49,20 @@ export default function ProfilePage() {
 
   return (
     <WithAuth>
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Profile</h1>
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <h1 className="text-2xl font-bold mb-6 text-gray-800">Profil Saya</h1>
 
-        {message && <div className="mb-4 text-sm text-green-600">{message}</div>}
-
-        {!editing && (
-          <ProfileCard user={contextUser} onEdit={() => setEditing(true)} />
+        {message && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl animate-bounce-short">
+            ✅ {message}
+          </div>
         )}
 
-        {editing && (
+        {!editing ? (
+          <div className="animate-fade-in">
+            <ProfileCard user={contextUser} onEdit={() => setEditing(true)} />
+          </div>
+        ) : (
           <div className="mt-6">
             <EditProfileForm
               initialData={contextUser}
