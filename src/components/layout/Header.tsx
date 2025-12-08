@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { LogOut, Menu } from 'lucide-react'; // Hapus import 'User' yang tidak dipakai
+import { LogOut, Menu, User as UserIcon } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Header() {
@@ -12,6 +12,7 @@ export default function Header() {
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+
         {/* Logo */}
         <Link href="/" className="text-2xl font-bold text-green-600 flex items-center gap-2">
           ⛰️ Sahabat Mendaki
@@ -21,7 +22,7 @@ export default function Header() {
         <nav className="hidden md:flex items-center gap-6">
           <Link href="/search?type=gear" className="text-gray-600 hover:text-green-600">Sewa Alat</Link>
           <Link href="/search?type=service" className="text-gray-600 hover:text-green-600">Cari Guide</Link>
-          
+
           {/* Role-based menu */}
           {user?.role === 'GEAR_OWNER' && (
             <Link href="/gear-management" className="text-blue-600 font-medium">Kelola Gear</Link>
@@ -31,11 +32,8 @@ export default function Header() {
             <Link href="/guide-management" className="text-blue-600 font-medium">Kelola Layanan</Link>
           )}
 
-          {/* MENU CASHFLOW (Untuk Guide & Gear Owner) */}
           {(user?.role === 'GUIDE' || user?.role === 'GEAR_OWNER') && (
-            <Link href="/cashflow" className="text-orange-600 font-medium">
-              Cashflow
-            </Link>
+            <Link href="/cashflow" className="text-orange-600 font-medium">Cashflow</Link>
           )}
 
           {user?.role === 'CUSTOMER' && (
@@ -46,9 +44,21 @@ export default function Header() {
         {/* Auth Buttons */}
         <div className="hidden md:flex items-center gap-4">
           {user ? (
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">Halo, <b>{user.fullName.split(' ')[0]}</b></span>
-              <button 
+            <div className="flex items-center gap-5">
+
+              {/* USERNAME + ICON + LINK TO PROFILE */}
+              <Link
+                href="/profile"
+                className="flex items-center gap-2 text-gray-700 hover:text-green-600 transition"
+              >
+                <UserIcon size={18} className="text-green-600" />
+                <span className="text-sm">
+                  Halo, <b>{user.fullName.split(' ')[0]}</b>
+                </span>
+              </Link>
+
+              {/* Logout */}
+              <button
                 onClick={logout}
                 className="flex items-center gap-2 text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg transition"
               >
@@ -71,21 +81,36 @@ export default function Header() {
         </button>
       </div>
 
-      {/* Mobile Menu Dropdown (Sederhana) */}
+      {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t p-4 flex flex-col gap-4 shadow-lg">
           <Link href="/search?type=gear" onClick={() => setIsMenuOpen(false)}>Sewa Alat</Link>
           <Link href="/search?type=service" onClick={() => setIsMenuOpen(false)}>Cari Guide</Link>
+
           {user ? (
             <>
+              {/* Profile */}
+              <Link
+                href="/profile"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-2 text-green-700 font-medium"
+              >
+                <UserIcon size={18} /> Profil Saya
+              </Link>
+
+              {/* Role menu */}
               {user.role === 'GEAR_OWNER' && (
-                <Link href="/gear-management" onClick={() => setIsMenuOpen(false)}>Kelola Gear</Link>
+                <Link href="/gear-management" onClick={() => setIsMenuOpen(false)}>
+                  Kelola Gear
+                </Link>
               )}
+
               {user.role === 'GUIDE' && (
-                <Link href="/guide-management" onClick={() => setIsMenuOpen(false)}>Kelola Layanan</Link>
+                <Link href="/guide-management" onClick={() => setIsMenuOpen(false)}>
+                  Kelola Layanan
+                </Link>
               )}
-              
-              {/* Cashflow di Mobile Menu */}
+
               {(user.role === 'GUIDE' || user.role === 'GEAR_OWNER') && (
                 <Link href="/cashflow" onClick={() => setIsMenuOpen(false)} className="text-orange-600 font-medium">
                   Laporan Keuangan
@@ -93,10 +118,15 @@ export default function Header() {
               )}
 
               {user.role === 'CUSTOMER' && (
-                <Link href="/bookings" onClick={() => setIsMenuOpen(false)}>Booking Saya</Link>
+                <Link href="/bookings" onClick={() => setIsMenuOpen(false)}>
+                  Booking Saya
+                </Link>
               )}
+
               <hr />
-              <button onClick={logout} className="text-red-500 text-left">Logout</button>
+              <button onClick={logout} className="text-red-500 text-left">
+                Logout
+              </button>
             </>
           ) : (
             <>
