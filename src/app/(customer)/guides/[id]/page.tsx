@@ -7,6 +7,7 @@ import DatePicker from 'react-datepicker';
 import { getJson, postJsonAuth } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import 'react-datepicker/dist/react-datepicker.css';
+import { Image as ImageIcon } from 'lucide-react';
 
 export default function GuideDetailPage() {
   const params = useParams();
@@ -70,22 +71,21 @@ export default function GuideDetailPage() {
     });
   };
 
-  // --- LOGIKA PERHITUNGAN ---
+  // --- LOGIKA PERHITUNGAN TANGGAL ---
   const servicePrice = Number(guide?.price) || 0;
   const serviceDuration = Math.max(1, Number(guide?.duration) || 1); 
   const maxGroupSize = Number(guide?.maxGroupSize) || 1;
 
+  // Hitung Tanggal Selesai Otomatis
   const calculatedEndDate = startDate
     ? new Date(startDate.getTime() + (serviceDuration - 1) * 24 * 60 * 60 * 1000)
     : null;
 
   const total = servicePrice; 
 
-  // --- PERBAIKAN: VARIABEL INI DIPINDAHKAN KE SINI (COMPONENT SCOPE) ---
   const areVariantsIncomplete = hasVariants && selectedVariants.some(variantSet => 
     Object.values(variantSet).some(option => option === '')
   );
-  // ---------------------------------------------------------------------
 
   const handleQuantityChange = (newQty: number) => {
     if (newQty < 1) return;
@@ -128,10 +128,7 @@ export default function GuideDetailPage() {
         }
       };
 
-      console.log('Creating booking:', bookingData);
-      
       const response = await postJsonAuth('/bookings', bookingData);
-      console.log('Booking response:', response);
 
       if (response.payment && response.payment.paymentUrl) {
         window.location.href = response.payment.paymentUrl;
@@ -154,16 +151,32 @@ export default function GuideDetailPage() {
   return (
     <PageWrapper>
       <div className="container mx-auto px-4 py-12 bg-white">
-        <h1 className="text-gray-700 text-4xl font-bold text-center mb-8">Detail Booking: {guide.title}</h1>
-        <div className="grid md:grid-cols-2 gap-12">
+        <h1 className="text-gray-700 text-3xl md:text-4xl font-bold text-center mb-8">Detail Booking: {guide.title}</h1>
+        <div className="grid md:grid-cols-2 gap-8 md:gap-12">
+          
+          {/* --- IMAGE SECTION (FIXED) --- */}
           <div>
-            <img src={guide.images?.[0]?.url || '/images/placeholder.png'} alt={guide.title} className="w-full h-80 object-cover rounded-lg shadow-md" />
+            <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden shadow-md bg-gray-100 border border-gray-200">
+              {guide.images?.[0]?.url ? (
+                <img 
+                  src={guide.images[0].url} 
+                  alt={guide.title} 
+                  className="w-full h-full object-cover" 
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-300">
+                  <ImageIcon size={64} />
+                </div>
+              )}
+            </div>
           </div>
+          {/* ----------------------------- */}
+
           <div className="flex flex-col justify-between">
             <div>
-              <p className="text-gray-600 mb-2">Rating: {(guide.rating ?? 0).toFixed(1)} stars</p>
+              <p className="text-gray-600 mb-2">Rating: {(guide.rating ?? 0).toFixed(1)} ⭐</p>
               <p className="text-gray-600 mb-2">Lokasi: {guide.location}</p>
-              <p className="text-gray-600 mb-4">{guide.description}</p>
+              <p className="text-gray-600 mb-4 whitespace-pre-line">{guide.description}</p>
               
               <p className="text-green-600 font-bold text-2xl mb-6">
                 Rp{servicePrice.toLocaleString('id-ID')} / paket
@@ -177,9 +190,9 @@ export default function GuideDetailPage() {
                   Jumlah Anggota: (Maks: {maxGroupSize} orang)
                 </label>
                 <div className="flex items-center gap-3">
-                  <button onClick={() => handleQuantityChange(numberOfPeople - 1)} className="bg-green-200 px-4 py-2 rounded hover:bg-green-300 text-gray-600" disabled={numberOfPeople <= 1}>−</button>
-                  <span className="text-xl text-gray-600">{numberOfPeople}</span>
-                  <button onClick={() => handleQuantityChange(numberOfPeople + 1)} className="bg-green-200 px-4 py-2 rounded hover:bg-green-300 text-gray-600" disabled={numberOfPeople >= maxGroupSize}>+</button>
+                  <button onClick={() => handleQuantityChange(numberOfPeople - 1)} className="bg-green-100 hover:bg-green-200 px-4 py-2 rounded text-green-700 transition" disabled={numberOfPeople <= 1}>−</button>
+                  <span className="text-xl text-gray-700 font-medium w-8 text-center">{numberOfPeople}</span>
+                  <button onClick={() => handleQuantityChange(numberOfPeople + 1)} className="bg-green-100 hover:bg-green-200 px-4 py-2 rounded text-green-700 transition" disabled={numberOfPeople >= maxGroupSize}>+</button>
                 </div>
               </div>
 
@@ -187,34 +200,38 @@ export default function GuideDetailPage() {
               {hasVariants && (
                 <div className="mb-6">
                   <label className="block text-gray-700 font-semibold mb-2">Detail Pilihan Anggota:</label>
-                  {Array.from({ length: numberOfPeople }).map((_, index) => (
-                    <div key={index} className="mb-4 p-3 border rounded-lg bg-gray-50">
-                      <span className="font-semibold text-gray-600">Anggota {index + 1}:</span>
-                      {guide.variants.map((variant: any) => (
-                        <div key={variant.name} className="mt-2">
-                          <label className="block text-sm text-gray-500 mb-1">{variant.name}</label>
-                          <select
-                            value={selectedVariants[index]?.[variant.name] || ''}
-                            onChange={(e) => handleVariantChange(index, variant.name, e.target.value)}
-                            className="text-gray-600 w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                            required
-                          >
-                            <option value="">Pilih {variant.name}...</option>
-                            {variant.options.map((opt: string) => (
-                              <option key={opt} value={opt}>{opt}</option>
+                  <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                    {Array.from({ length: numberOfPeople }).map((_, index) => (
+                        <div key={index} className="p-4 border rounded-lg bg-gray-50">
+                        <span className="font-semibold text-gray-700 text-sm mb-2 block">Anggota {index + 1}:</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {guide.variants.map((variant: any) => (
+                            <div key={variant.name}>
+                                <label className="block text-xs text-gray-500 mb-1">{variant.name}</label>
+                                <select
+                                value={selectedVariants[index]?.[variant.name] || ''}
+                                onChange={(e) => handleVariantChange(index, variant.name, e.target.value)}
+                                className="w-full p-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                                required
+                                >
+                                <option value="">Pilih...</option>
+                                {variant.options.map((opt: string) => (
+                                    <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                                </select>
+                            </div>
                             ))}
-                          </select>
                         </div>
-                      ))}
-                    </div>
-                  ))}
+                        </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {/* Date Picker Section */}
               <div className="mb-6">
                 <label className="block text-gray-700 font-semibold mb-2">Pilih Tanggal Mulai Booking:</label>
-                <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                   <div className="w-full">
                     <DatePicker 
                         selected={startDate} 
@@ -224,16 +241,16 @@ export default function GuideDetailPage() {
                         endDate={calculatedEndDate || undefined}
                         minDate={new Date()}
                         placeholderText="Pilih Tanggal" 
-                        className="text-gray-600 w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
                   </div>
                   {/* End Date Picker Read-Only */}
                   <div className="w-full">
                     <input 
                         type="text"
-                        value={calculatedEndDate ? calculatedEndDate.toLocaleDateString('id-ID') : '-'}
+                        value={calculatedEndDate ? calculatedEndDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
                         readOnly
-                        className="text-gray-600 w-full p-2 border border-gray-300 rounded bg-gray-100 cursor-not-allowed"
+                        className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
                         placeholder="Selesai (Otomatis)"
                     />
                   </div>
@@ -247,24 +264,33 @@ export default function GuideDetailPage() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Tambahkan catatan untuk guide..."
-                  className="text-gray-600 w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                   rows={3}
                 />
               </div>
             </div>
 
-            <div className="bg-green-50 text-gray-600 p-4 rounded-lg mb-6">
-              <p>Durasi: {serviceDuration} hari</p>
-              <p>Jumlah Anggota: {numberOfPeople}</p>
-              <p className="text-green-600 font-bold text-xl mt-2">Total: Rp{total.toLocaleString('id-ID')}</p>
+            <div className="bg-green-50 text-gray-700 p-5 rounded-xl mb-6 border border-green-100">
+              <div className="flex justify-between items-center mb-1">
+                <span>Durasi</span>
+                <span className="font-semibold">{serviceDuration} hari</span>
+              </div>
+              <div className="flex justify-between items-center mb-3">
+                <span>Jumlah Anggota</span>
+                <span className="font-semibold">{numberOfPeople} orang</span>
+              </div>
+              <div className="border-t border-green-200 pt-3 flex justify-between items-center">
+                <span className="font-bold text-lg">Total</span>
+                <span className="font-bold text-xl text-green-700">Rp{total.toLocaleString('id-ID')}</span>
+              </div>
             </div>
 
             <button 
               onClick={handleCheckout} 
-              className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="w-full bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 transition shadow-lg disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none"
               disabled={!startDate || bookingLoading || areVariantsIncomplete}
             >
-              {bookingLoading ? 'Memproses...' : 'Booking & Bayar'}
+              {bookingLoading ? 'Memproses Booking...' : 'Booking & Bayar Sekarang'}
             </button>
           </div>
         </div>

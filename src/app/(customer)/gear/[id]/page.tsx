@@ -7,6 +7,7 @@ import DatePicker from 'react-datepicker';
 import { getJson, postJsonAuth } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import 'react-datepicker/dist/react-datepicker.css';
+import { Image as ImageIcon } from 'lucide-react';
 
 export default function GearDetailPage() {
   const params = useParams();
@@ -81,9 +82,7 @@ export default function GearDetailPage() {
     setQuantity(newQty);
   };
 
-  // --- PERBAIKAN 1: DURASI SESUAI BACKEND (HAPUS +1) ---
-  // Backend: (End - Start). Misal Tgl 1 ke Tgl 2 = 1 Hari (24 jam)
-  // Jika tanggal sama, minimal 1 hari.
+  // Durasi sesuai backend (inklusif)
   const duration = startDate && endDate
     ? Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)))
     : 0;
@@ -130,20 +129,12 @@ export default function GearDetailPage() {
         }
       };
 
-      console.log('Creating booking:', bookingData);
-      
-      // --- PERBAIKAN 2: REQUEST BOOKING & HANDLE PAYMENT URL LANGSUNG ---
       const response = await postJsonAuth('/bookings', bookingData);
-      console.log('Booking response:', response);
 
-      // Backend return structure: { booking: {...}, payment: { paymentUrl: "..." } }
       if (response.payment && response.payment.paymentUrl) {
-        // Redirect langsung ke Midtrans
         window.location.href = response.payment.paymentUrl;
       } else {
-        // Jika gratis atau tidak ada payment link (jarang terjadi)
-        alert('Booking berhasil dibuat!');
-        router.push('/bookings');
+        router.push(`/bookings/${response.booking.id}/success`);
       }
 
     } catch (err: any) {
@@ -161,109 +152,141 @@ export default function GearDetailPage() {
   return (
     <PageWrapper>
       <div className="container mx-auto px-4 py-12 bg-white">
-        <h1 className="text-gray-700 text-4xl font-bold text-center mb-8">
-          Detail Booking {gear.name || gear.title}
+        <h1 className="text-gray-700 text-3xl md:text-4xl font-bold text-center mb-8">
+          Detail Sewa: {gear.name || gear.title}
         </h1>
-        <div className="grid md:grid-cols-2 gap-12">
-          {/* ... (Bagian Gambar & Info Produk SAMA SEPERTI SEBELUMNYA) ... */}
+        <div className="grid md:grid-cols-2 gap-8 md:gap-12">
+          
+          {/* --- IMAGE SECTION (FIXED) --- */}
           <div>
-            <img 
-              src={gear.images?.[0]?.url || '/images/placeholder.png'} 
-              alt={gear.name} 
-              className="w-full h-80 object-cover rounded-lg shadow-md" 
-            />
-            <div className="mt-4">
-                <h3 className="font-bold">Deskripsi</h3>
-                <p className="text-gray-600">{gear.description}</p>
+            <div className="relative w-full aspect-square rounded-xl overflow-hidden shadow-md bg-gray-100 border border-gray-200">
+              {gear.images?.[0]?.url ? (
+                <img 
+                  src={gear.images[0].url} 
+                  alt={gear.name} 
+                  className="w-full h-full object-cover" 
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-300">
+                  <ImageIcon size={64} />
+                </div>
+              )}
+            </div>
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                <h3 className="font-bold text-gray-800 mb-2">Deskripsi Produk</h3>
+                <p className="text-gray-600 whitespace-pre-line leading-relaxed">{gear.description}</p>
             </div>
           </div>
+          {/* ----------------------------- */}
 
           <div className="flex flex-col justify-between">
             <div>
-               {/* ... (Bagian Info Harga & Stock SAMA) ... */}
-               <p className="text-green-600 font-bold text-2xl mb-6">
-                Rp{pricePerDay.toLocaleString('id-ID')} / hari
+               <p className="text-green-600 font-bold text-3xl mb-6">
+                Rp{pricePerDay.toLocaleString('id-ID')} <span className="text-sm font-normal text-gray-500">/ hari</span>
               </p>
 
               <div className="mb-6">
-                <label className="block text-gray-700 font-semibold mb-2">Jumlah:</label>
+                <label className="block text-gray-700 font-semibold mb-2">Jumlah Sewa:</label>
                 <div className="flex items-center gap-3">
-                  <button onClick={() => handleQuantityChange(quantity - 1)} className="bg-green-200 px-4 py-2 rounded" disabled={quantity <= 1}>−</button>
-                  <span className="text-xl">{quantity}</span>
-                  <button onClick={() => handleQuantityChange(quantity + 1)} className="bg-green-200 px-4 py-2 rounded">+</button>
+                  <button onClick={() => handleQuantityChange(quantity - 1)} className="bg-green-100 hover:bg-green-200 px-4 py-2 rounded text-green-700 transition" disabled={quantity <= 1}>−</button>
+                  <span className="text-xl text-gray-700 font-medium w-8 text-center">{quantity}</span>
+                  <button onClick={() => handleQuantityChange(quantity + 1)} className="bg-green-100 hover:bg-green-200 px-4 py-2 rounded text-green-700 transition" disabled={quantity >= (gear.stock || 99)}>+</button>
                 </div>
+                <p className="text-xs text-gray-500 mt-1">Stok tersedia: {gear.stock}</p>
               </div>
 
               {/* Varian Logic (Tetap) */}
               {hasVariants && (
                 <div className="mb-6">
-                    <label className="font-bold">Pilih Varian:</label>
-                    {Array.from({ length: quantity }).map((_, index) => (
-                    <div key={index} className="mb-4 p-3 border rounded bg-gray-50">
-                        <span className="text-sm font-bold">Item {index + 1}</span>
-                        {gear.variants.map((variant: any) => (
-                        <div key={variant.name} className="mt-2">
-                            <label className="text-xs text-gray-500">{variant.name}</label>
-                            <select
-                            value={selectedVariants[index]?.[variant.name] || ''}
-                            onChange={(e) => handleVariantChange(index, variant.name, e.target.value)}
-                            className="w-full border p-1 rounded"
-                            >
-                            <option value="">Pilih...</option>
-                            {variant.options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
-                            </select>
+                    <label className="block text-gray-700 font-semibold mb-2">Pilih Varian:</label>
+                    <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                        {Array.from({ length: quantity }).map((_, index) => (
+                        <div key={index} className="p-3 border rounded-lg bg-gray-50">
+                            <span className="text-sm font-semibold text-gray-700 mb-2 block">Item {index + 1}</span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {gear.variants.map((variant: any) => (
+                                <div key={variant.name}>
+                                    <label className="block text-xs text-gray-500 mb-1">{variant.name}</label>
+                                    <select
+                                    value={selectedVariants[index]?.[variant.name] || ''}
+                                    onChange={(e) => handleVariantChange(index, variant.name, e.target.value)}
+                                    className="w-full p-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                                    >
+                                    <option value="">Pilih...</option>
+                                    {variant.options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
+                                    </select>
+                                </div>
+                                ))}
+                            </div>
                         </div>
                         ))}
                     </div>
-                    ))}
                 </div>
               )}
 
               <div className="mb-6">
                 <label className="block text-gray-700 font-semibold mb-2">Pilih Tanggal Sewa:</label>
-                <div className="flex flex-col md:flex-row gap-4">
-                  <DatePicker 
-                    selected={startDate} 
-                    onChange={setStartDate} 
-                    selectsStart 
-                    startDate={startDate} 
-                    endDate={endDate}
-                    minDate={new Date()}
-                    placeholderText="Tanggal Mulai" 
-                    className="border p-2 rounded w-full"
-                  />
-                  <DatePicker 
-                    selected={endDate} 
-                    onChange={setEndDate} 
-                    selectsEnd 
-                    startDate={startDate} 
-                    endDate={endDate} 
-                    minDate={startDate ?? new Date()}
-                    placeholderText="Tanggal Selesai" 
-                    className="border p-2 rounded w-full"
-                  />
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="w-full">
+                    <DatePicker 
+                        selected={startDate} 
+                        onChange={setStartDate} 
+                        selectsStart 
+                        startDate={startDate} 
+                        endDate={endDate}
+                        minDate={new Date()}
+                        placeholderText="Mulai Sewa" 
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                  </div>
+                  <div className="w-full">
+                    <DatePicker 
+                        selected={endDate} 
+                        onChange={setEndDate} 
+                        selectsEnd 
+                        startDate={startDate} 
+                        endDate={endDate} 
+                        minDate={startDate ?? new Date()}
+                        placeholderText="Selesai Sewa" 
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                  </div>
                 </div>
               </div>
               
-              <textarea 
-                value={notes} 
-                onChange={e => setNotes(e.target.value)} 
-                placeholder="Catatan..." 
-                className="w-full border p-2 rounded mb-4"
-              />
+              <div className="mb-6">
+                <label className="block text-gray-700 font-semibold mb-2">Catatan (Opsional):</label>
+                <textarea 
+                    value={notes} 
+                    onChange={e => setNotes(e.target.value)} 
+                    placeholder="Contoh: Tolong siapkan yang warna merah..." 
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    rows={2}
+                />
+              </div>
             </div>
 
-            <div className="bg-green-50 text-gray-600 p-4 rounded-lg mb-6">
-              <p>Durasi: {duration} hari</p>
-              <p>Total: <span className="font-bold text-xl text-green-600">Rp{total.toLocaleString('id-ID')}</span></p>
+            <div className="bg-green-50 text-gray-700 p-5 rounded-xl mb-6 border border-green-100">
+              <div className="flex justify-between items-center mb-1">
+                <span>Durasi Sewa</span>
+                <span className="font-semibold">{duration} hari</span>
+              </div>
+              <div className="flex justify-between items-center mb-3">
+                <span>Jumlah Barang</span>
+                <span className="font-semibold">{quantity} unit</span>
+              </div>
+              <div className="border-t border-green-200 pt-3 flex justify-between items-center">
+                <span className="font-bold text-lg">Total Pembayaran</span>
+                <span className="font-bold text-xl text-green-700">Rp{total.toLocaleString('id-ID')}</span>
+              </div>
             </div>
 
             <button 
               onClick={handleBooking} 
-              className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition disabled:bg-gray-400"
+              className="w-full bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 transition shadow-lg disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none"
               disabled={duration <= 0 || bookingLoading || areVariantsIncomplete}
             >
-              {bookingLoading ? 'Memproses...' : 'Booking & Bayar'}
+              {bookingLoading ? 'Memproses Booking...' : 'Booking & Bayar Sekarang'}
             </button>
           </div>
         </div>
